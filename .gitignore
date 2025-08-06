@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environnement virtuel
+venv/
+.env
+
+# Logs et fichiers sensibles
+*.log
+access.log
+token_store.json
+roi_token.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flask
+instance/
+
+# VSCode
+.vscode/
+
+# Autres
+*.sqlite3
+*.db
+*.bak
+*.swp

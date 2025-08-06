@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestion des tokens</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #222; color: #fff; font-family: Arial, sans-serif; text-align: center; padding-top: 40px; }
+        table { margin: 0 auto; border-collapse: collapse; background: #333; }
+        th, td { padding: 8px 16px; border: 1px solid #444; }
+        th { background: #444; }
+        .expired { color: #c00; }
+        .active { color: #0c0; }
+        button { background: #c00; color: #fff; border: none; border-radius: 4px; padding: 4px 12px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Gestion des tokens</h2>
+    <table>
+        <tr>
+            <th>Token (hash)</th>
+            <th>Expire dans</th>
+            <th>IP</th>
+            <th>Device ID</th>
+            <th>Action</th>
+        </tr>
+        {% for t in tokens %}
+        <tr>
+            <td style="font-size:0.8em;max-width:200px;word-break:break-all;">{{ t.token }}</td>
+            <td class="{{ 'expired' if t.remaining < 0 else 'active' }}">
+                {% if t.remaining < 0 %}Expiré{% else %}{{ t.remaining }}s{% endif %}
+            </td>
+            <td>{{ t.ip or '' }}</td>
+            <td>{{ t.device_id or '' }}</td>
+            <td>
+                <button onclick="deleteToken('{{ t.token }}')">Supprimer</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <script>
+    function deleteToken(token) {
+        fetch('/admin_tokens/delete/' + token, {method:'POST'})
+        .then(()=>window.location.reload());
+    }
+    </script>
+</body>
+</html>
