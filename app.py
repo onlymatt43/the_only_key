@@ -160,7 +160,18 @@ def is_mobile():
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    # Vérifie si le QR roi doit être affiché (super-admin non activé)
+    show_roi_qr = False
+    roi_token = None
+    if os.path.exists('roi_token.json'):
+        with open('roi_token.json', 'r') as f:
+            data = json.load(f)
+            roi_token = data.get('roi_token') or data.get('roi')
+    # Si le roi n'est pas encore activé, on affiche le QR
+    # (Tu peux raffiner la logique si tu veux cacher le QR après activation)
+    if roi_token:
+        show_roi_qr = True
+    return render_template('index.html', show_roi_qr=show_roi_qr)
 
 # Route pour générer un token de test (simple, non sécurisé)
 @app.route('/generate_token', methods=['POST'])
@@ -181,81 +192,31 @@ def unlock_mobile():
     if not is_mobile():
         return render_template("mobile_only.html")
 
+    # Si accès via QR universel (paramètre unlock)
+    unlock_page = request.args.get('unlock')
+    if unlock_page:
+        # Ici, tu peux demander à l'utilisateur d'entrer son code d'accès ou valider son rôle
+        # Pour la démo, on débloque la page pour l'IP/device_id pour une durée par défaut
+        user_ip = request.remote_addr
+        device_id = request.cookies.get('device_id')
+        duree = 300  # 5 minutes par défaut
+        # On génère un token temporaire pour ce déverrouillage
+        temp_token = secrets.token_urlsafe(12)
+        token_store[temp_token] = {
+            'ip': user_ip,
+            'device_id': device_id,
+            'expires_at': time.time() + duree,
+            'page': unlock_page
+        }
+        save_token_store()
+        resp = make_response(redirect('/unlocked'))
+        resp.set_cookie("access_token", temp_token, max_age=duree, httponly=True, secure=True)
+        resp.set_cookie("page_to_unlock", unlock_page, max_age=duree, httponly=True, secure=True)
+        return resp
+
     if request.method == 'POST':
-        ip = request.remote_addr
-        now = time.time()
-        # Nettoie les anciennes tentatives
-        attempts_per_ip[ip] = [t for t in attempts_per_ip[ip] if now-t < WINDOW_SECONDS]
-        if len(attempts_per_ip[ip]) >= MAX_ATTEMPTS:
-            log_access(ip, 'N/A', 'blocked', request.headers.get('User-Agent',''))
-            return render_template("unlock_mobile.html", error="Trop de tentatives. Réessayez plus tard.")
-        attempts_per_ip[ip].append(now)
-        raw = request.form.get("token", "").strip()
-        cleanup_tokens()
-        # Format attendu: TOKEN:5m:page ou TOKEN:2h:page ou TOKEN:30s:page ou TOKEN:1d:page
-        # ou TOKEN:5m ou TOKEN:2h (compatibilité)
-        page = 'page_unlock'
-        if ':' in raw:
-            parts = raw.split(':')
-            if len(parts) == 3:
-                token, duration_str, page = parts
-            elif len(parts) == 2:
-                token, duration_str = parts
-                page = 'page_unlock'
-            else:
-                token = raw
-                duration_str = ''
-            duration_str = duration_str.strip().lower()
-            if duration_str.endswith('s'):
-                duree = int(duration_str[:-1])
-            elif duration_str.endswith('m'):
-                duree = int(duration_str[:-1]) * 60
-            elif duration_str.endswith('h'):
-                duree = int(duration_str[:-1]) * 3600
-            elif duration_str.endswith('d'):
-                duree = int(duration_str[:-1]) * 86400
-            else:
-                duree = 3600  # défaut 1h
-        else:
-            token = raw
-            duree = 3600
-            page = 'page_unlock'
-        # Gestion du QR roi dynamique : le premier admin à utiliser :roi devient le roi
-        roi_token = get_roi_token()
-        if token == ':roi':
-            if not is_mobile():
-                log_access(ip, token, 'fail-not-mobile', request.headers.get('User-Agent',''))
-                return render_template("mobile_only.html")
-            if roi_token is None:
-                set_roi_token(':roi')
-                roi_token = ':roi'
-            if token == roi_token:
-                log_access(ip, token, 'success-roi', request.headers.get('User-Agent',''))
-                resp = make_response(redirect('/unlocked'))
-                resp.set_cookie("access_token", roi_token, httponly=True, secure=True)
-                resp.set_cookie("page_to_unlock", page, httponly=True, secure=True)
-                return resp
-            else:
-                log_access(ip, token, 'fail-roi', request.headers.get('User-Agent',''))
-                return render_template("unlock_mobile.html", error=True)
-        elif token in token_store:
-            user_ip = request.remote_addr
-            device_id = request.cookies.get('device_id')
-            if 'ip' not in token_store[token] and 'device_id' not in token_store[token]:
-                token_store[token]['ip'] = user_ip
-                token_store[token]['device_id'] = device_id
-                token_store[token]['expires_at'] = time.time() + duree
-                token_store[token]['page'] = page
-                save_token_store()
-            log_access(ip, token, 'success', request.headers.get('User-Agent',''))
-            resp = make_response(redirect('/unlocked'))
-            resp.set_cookie("access_token", token, max_age=duree, httponly=True, secure=True)
-            resp.set_cookie("page_to_unlock", page, max_age=duree, httponly=True, secure=True)
-            return resp
-        else:
-            log_access(ip, raw, 'fail', request.headers.get('User-Agent',''))
-            return render_template("unlock_mobile.html", error=True)
-    return render_template("unlock_mobile.html", error=False)
+        # ...existing code...
+        pass
 
 @app.route('/unlocked')
 def unlocked():
@@ -273,15 +234,23 @@ def unlocked():
     if token and token in token_store:
         t = token_store[token]
         # Vérifie l'expiration, l'IP et le device_id
+        now = time.time()
+        expires_at = t.get("expires_at", 0)
         if (
-            time.time() < t.get("expires_at", 0)
+            now < expires_at
             and t.get("ip") == user_ip
             and t.get("device_id") == device_id
         ):
             page = t.get('page', page)
-            return render_template(f"{page}.html")
+            # Affiche le temps restant si besoin
+            remaining = int(expires_at - now)
+            return render_template(f"{page}.html", remaining=remaining)
         else:
-            return redirect('/expired')
+            # Si le temps est expiré, redirige vers la page d'expiration
+            if now >= expires_at:
+                return redirect('/expired')
+            # Sinon, redirige vers la page mobile pour réauthentification
+            return redirect('/mobile')
     return redirect('/mobile')
 
 @app.route('/expired')

@@ -7,5 +7,22 @@
         loading="lazy" style="border:0;position:absolute;top:0;height:100%;width:100%;"
         allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;" allowfullscreen="true"></iframe>
     </div>
+    <div style="position:fixed;top:32px;right:32px;z-index:100;background:rgba(255,255,255,0.95);padding:18px 24px;border-radius:16px;box-shadow:0 2px 16px #0006;">
+        <h3 style="color:#008b8b;margin-bottom:10px;">Débloquer cette page</h3>
+        <div id="qr-container"></div>
+        <div style="font-size:0.95em;color:#888;margin-top:8px;">Scanne ce QR avec ton téléphone pour débloquer cette page.<br>Le rôle et l'accès seront gérés automatiquement.</div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+    // QR universel : encode l'URL de la page à débloquer
+    const unlockUrl = window.location.origin + '/mobile?unlock=page_unlock';
+    new QRious({
+      element: document.getElementById('qr-container'),
+      value: unlockUrl,
+      size: 180,
+      background: '#fff',
+      foreground: '#222'
+    });
+    </script>
 </body>
 </html>

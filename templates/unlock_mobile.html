@@ -2,11 +2,12 @@
 <html>
 <head><title>Enter Token</title></head>
 <body style="background:black;color:white;text-align:center;padding-top:100px;">
-    <h1>Enter your token</h1>
-    <form method="POST">
-        <input type="text" name="token" required>
-        <button type="submit">Unlock</button>
+    <h1>Enter your access code</h1>
+    <form id="unlock-form" method="POST" style="margin-bottom:18px;">
+        <input type="text" name="token" required placeholder="Enter or scan your code">
+        <button type="submit" style="padding:10px 24px;font-size:1.1em;">Unlock now</button>
     </form>
+    <div style="color:#0a8;font-size:1em;margin-bottom:12px;">This will unlock any device using the same IP address.<br>Access time starts now.</div>
     {% if error %}
         <p style="color:red;">Invalid token. Try again.</p>
     {% endif %}
