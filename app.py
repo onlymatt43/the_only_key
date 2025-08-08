@@ -16,33 +16,26 @@ def auto_login():
     token = request.args.get('token', '').strip()
     if not token:
         return redirect('/')
+    
     roi_token = get_roi_token() or ':roi'
     cleanup_tokens()
+    
     # Si token roi
     if token == roi_token or token == ':roi':
         return redirect(f'/roi_login?token={token}')
-    # Si token admin
+    
+    # Si token valide dans le store
     if token in token_store:
-        # On peut raffiner ici si tu veux distinguer admin/user par un champ dans le store
-        # Pour l'instant, on considère tout token valide comme admin si demandé
-        # (ou tu peux ajouter une logique pour différencier)
-        # Si tu veux une vraie distinction, il faut stocker le rôle dans token_store
-        return redirect(f'/admin_login?token={token}')
-    # Sinon, on tente user
-    return redirect(f'/user_login?token={token}')
-
-# --- Routes d'auto-login par QR code pour chaque rôle ---
-from flask import Flask, render_template, request, redirect, make_response, jsonify
-import os
-import json
-import time
-import secrets
-import hashlib
-from collections import defaultdict
-import logging
-from functools import wraps
-
-app = Flask(__name__)
+        token_data = token_store[token]
+        role = token_data.get('role', 'user')
+        
+        if role == 'admin':
+            return redirect(f'/admin_login?token={token}')
+        else:
+            return redirect(f'/user_login?token={token}')
+    
+    # Token invalide
+    return "Token invalide ou expiré", 403
 
 # --- Routes d'auto-login par QR code pour chaque rôle ---
 @app.route('/roi_login')
