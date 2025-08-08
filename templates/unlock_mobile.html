@@ -1,29 +1,56 @@
 <!DOCTYPE html>
 <html>
-<head><title>Enter Token</title></head>
-<body style="background:black;color:white;text-align:center;padding-top:100px;">
-    <h1>Enter your access code</h1>
-    <form id="unlock-form" method="POST" style="margin-bottom:18px;">
-        <input type="text" name="token" required placeholder="Enter or scan your code">
-        <button type="submit" style="padding:10px 24px;font-size:1.1em;">Unlock now</button>
-    </form>
-    <div style="color:#0a8;font-size:1em;margin-bottom:12px;">This will unlock any device using the same IP address.<br>Access time starts now.</div>
-    {% if error %}
-        <p style="color:red;">Invalid token. Try again.</p>
+<head>
+    <title>Déblocage de contenu</title>
+    <style>
+        body { background:black; color:white; text-align:center; padding-top:100px; }
+        .timer { color:#0a8; font-size:1.2em; margin-bottom:18px; }
+    </style>
+</head>
+<body>
+    <h1>Accès à votre contenu</h1>
+    {% if minutes_left %}
+        <div class="timer" id="timer-box">
+            Vous avez {{ minutes_left }} minutes d’accès.<br>
+            La minuterie disparaîtra dans <span id="timer">30</span> secondes.
+        </div>
     {% endif %}
+    <div style="margin-top:24px;">
+        <p>Profitez de votre contenu sécurisé.</p>
+    </div>
+    {% if error %}
+        <p style="color:red;">Token invalide ou expiré.</p>
+    {% endif %}
+    <script>
+        // Minuterie pour masquer le timer après 30 secondes
+        let timer = 30;
+        const timerSpan = document.getElementById('timer');
+        const timerBox = document.getElementById('timer-box');
+        if (timerSpan && timerBox) {
+            const interval = setInterval(() => {
+                timer--;
+                timerSpan.textContent = timer;
+                if (timer <= 0) {
+                    timerBox.style.display = 'none';
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+    </script>
 </body>
-<script>
-// Génère un identifiant unique simple
-function generateDeviceId() {
-    return 'dev-' + Math.random().toString(36).substr(2, 16) + Date.now();
-}
-// Place le cookie device_id s'il n'existe pas déjà
-function setDeviceIdCookie() {
-    if (!document.cookie.split('; ').find(row => row.startsWith('device_id='))) {
-        var id = generateDeviceId();
-        document.cookie = 'device_id=' + id + '; path=/; max-age=31536000';
-    }
-}
-setDeviceIdCookie();
-</script>
 </html>
+import secrets
+import time
+
+def create_gift_token(minutes, url=None, role="user"):
+    token_hash = secrets.token_urlsafe(16)
+    expires_at = int(time.time()) + minutes * 60
+    token = {
+        "hash": token_hash,
+        "minutes": minutes,
+        "expires_at": expires_at,
+        "url": url,
+        "role": role
+    }
+    # Enregistre le token dans la base ou token_store.json
+    return token

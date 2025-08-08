@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, make_response, jsonify
 import os
 import json
@@ -288,6 +287,38 @@ def universal_qr():
 @app.route('/acheter')
 def acheter():
     return render_template("acheter.html")
+
+def create_gift_token(minutes, url, role):
+    token_hash = secrets.token_urlsafe(16)
+    expires_at = int(time.time()) + minutes * 60
+    token = {
+        "hash": token_hash,
+        "minutes": minutes,
+        "expires_at": expires_at,
+        "url": url,
+        "role": role
+    }
+    # Enregistre le token dans la base ou token_store.json
+    return token
+
+@app.route('/admin_gift_token', methods=['GET', 'POST'])
+@admin_required
+def admin_gift_token():
+    if request.method == 'POST':
+        minutes = int(request.form.get('minutes', 0))
+        url = request.form.get('url', '')
+        role = request.form.get('role', '')
+        token = create_gift_token(minutes, url, role)
+        # Sauvegarde le token dans token_store.json
+        token_store[token['hash']] = {
+            "minutes": minutes,
+            "expires_at": token['expires_at'],
+            "url": url,
+            "role": role
+        }
+        save_token_store()
+        return render_template("admin_gift_token.html", token=token['hash'])
+    return render_template("admin_gift_token.html")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))

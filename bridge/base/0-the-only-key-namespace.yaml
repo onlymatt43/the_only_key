@@ -1,0 +1,8 @@
+#! 0-the-only-key-namespace.yaml
+# Generated code, do not edit
+apiVersion: v1
+kind: Namespace
+metadata:
+    name: the-only-key
+    labels:
+        com.docker.compose.project: the_only_key

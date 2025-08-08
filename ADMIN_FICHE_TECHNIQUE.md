@@ -1,4 +1,4 @@
-# Fiche technique administrateur – The Only Key
+# Révision du code Fiche technique administrateur – The Only Key
 
 ## 1. Prérequis
 - Accès au serveur (hébergement Python/Flask, accès SSH recommandé)

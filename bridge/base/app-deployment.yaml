@@ -1,0 +1,43 @@
+#! app-deployment.yaml
+# Generated code, do not edit
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: app
+    namespace: the-only-key
+    labels:
+        com.docker.compose.project: the_only_key
+        com.docker.compose.service: app
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            com.docker.compose.project: the_only_key
+            com.docker.compose.service: app
+    strategy:
+        type: Recreate
+    template:
+        metadata:
+            labels:
+                com.docker.compose.project: the_only_key
+                com.docker.compose.service: app
+                com.docker.compose.network.default: "true"
+        spec:
+            containers:
+                - name: app
+                  image: the_only_key-app
+                  imagePullPolicy: IfNotPresent
+                  command: [python app.py]
+                  env:
+                    - name: FLASK_ENV
+                      value: "development"
+                  ports:
+                    - name: app-10000
+                      containerPort: 10000
+                  volumeMounts:
+                    - name: app
+                      mountPath: /app
+            volumes:
+                - name: app
+                  hostPath:
+                    path: /Users/mathieucourchesne/the_only_key
