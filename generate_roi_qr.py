@@ -2,6 +2,7 @@ import qrcode
 import shutil
 import secrets
 import json
+import os
 
 # 1. Generate a unique code for ROI
 roi_code = secrets.token_urlsafe(16)
@@ -10,12 +11,18 @@ roi_code = secrets.token_urlsafe(16)
 with open('roi_token.json', 'w') as f:
     json.dump({'roi_token': roi_code}, f)
 
-# 3. Generate the QR code for local testing
-url = f"http://localhost:10000/auto_login?token={roi_code}"
-img = qrcode.make(url)
-img.save("roi_qr.png")
-shutil.copy("roi_qr.png", "static/roi_qr.png")
+# Version production Render
+base_url = "https://the-only-key.onrender.com"
 
-print("ROI code:", roi_code)
-print("QR code saved as roi_qr.png")
+# 4. Generate the QR code
+url = f"{base_url}/auto_login?token={roi_code}"
+img = qrcode.make(url)
+img.save("roi_qr_prod.png")
+
+# Ensure static directory exists
+os.makedirs("static", exist_ok=True)
+shutil.copy("roi_qr_prod.png", "static/roi_qr.png")
+
+print("ROI code (PRODUCTION):", roi_code)
+print("QR code saved for production")
 print("URL:", url)

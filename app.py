@@ -93,7 +93,7 @@ def log_access(ip, token, status, user_agent):
         f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | IP: {ip} | Token: {token} | Status: {status} | UA: {user_agent}\n")
 
 # --- Protection admin par mot de passe simple ---
-ADMIN_PASSWORD = "adminpass"  # À changer !
+ADMIN_PASSWORD = "admin1pass"  # À changer !
 def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -320,6 +320,5 @@ def admin_gift_token():
         return render_template("admin_gift_token.html", token=token['hash'])
     return render_template("admin_gift_token.html")
 
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
