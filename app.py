@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, make_response, jsonify
+from flask import Flask, render_template, request, redirect, make_response, jsonify, session
 import os
 import json
 import time
@@ -9,33 +9,42 @@ import logging
 from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Clé secrète pour les sessions
 
 # Route d'auto-login universelle depuis l'index
+
 @app.route('/auto_login')
 def auto_login():
     token = request.args.get('token', '').strip()
     if not token:
         return redirect('/')
     
-    roi_token = get_roi_token() or ':roi'
+    # Nettoyer les tokens expirés
     cleanup_tokens()
     
-    # Si token roi
+    # Vérifier le token ROI
+    roi_token = get_roi_token()
     if token == roi_token or token == ':roi':
-        return redirect(f'/roi_login?token={token}')
+        # Token ROI - accès admin complet
+        session['is_roi'] = True
+        session['access_token'] = token
+        return redirect('/admin')
     
-    # Si token valide dans le store
+    # Vérifier si c'est un token temporaire valide
     if token in token_store:
         token_data = token_store[token]
-        role = token_data.get('role', 'user')
+        now = time.time()
         
-        if role == 'admin':
-            return redirect(f'/admin_login?token={token}')
+        if now < token_data.get('expires_at', 0):
+            # Token valide - rediriger vers l'accès mobile
+            return redirect(f'/mobile?token={token}')
         else:
-            return redirect(f'/user_login?token={token}')
+            # Token expiré
+            del token_store[token]
+            save_token_store()
     
-    # Token invalide
-    return "Token invalide ou expiré", 403
+    # Token invalide ou expiré
+    return render_template('error.html', message="Token invalide ou expiré"), 403
 
 # --- Routes d'auto-login par QR code pour chaque rôle ---
 @app.route('/roi_login')
@@ -312,6 +321,11 @@ def admin_gift_token():
         save_token_store()
         return render_template("admin_gift_token.html", token=token['hash'])
     return render_template("admin_gift_token.html")
+
+@app.route('/error')
+def error_page():
+    message = request.args.get('message', 'Erreur inconnue')
+    return render_template('error.html', message=message)
 
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))

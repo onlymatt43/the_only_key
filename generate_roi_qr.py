@@ -1,3 +1,4 @@
+
 import qrcode
 import shutil
 import secrets
