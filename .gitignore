@@ -1,31 +1,46 @@
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Environnement virtuel
+# Environnements virtuels
 venv/
-.env
+env/
+ENV/
 
-# Logs et fichiers sensibles
-*.log
-access.log
-token_store.json
+# Fichiers sensibles
 roi_token.json
+token_store.json
+access.log
+*.log
 
-# OS
+# Fichiers système
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Flask
-instance/
-
-# VSCode
-.vscode/
-
-# Autres
-*.sqlite3
-*.db
+# Fichiers temporaires
+*.tmp
+*.temp
 *.bak
-*.swp
