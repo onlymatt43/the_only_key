@@ -70,87 +70,87 @@
         {% endif %}
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <script>
-    function genToken() {
-        fetch('/gen_token_hash', {method:'POST'})
-        .then(r=>r.json()).then(data=>{
-            document.getElementById('token').value = data.token;
-        });
-    }
-    function setRoi() {
-        document.getElementById('token').value = ':roi';
-    }
-    function generateQR() {
-        var token = document.getElementById('token').value.trim();
-        var duree = document.getElementById('duree').value;
-        var unite = document.getElementById('unite').value;
-        var page = document.getElementById('page').value;
-        if (!token) return;
-        var qrdata = token + ':' + duree + unite + ':' + page;
-        document.getElementById('qrtext').innerText = 'QR à scanner: ' + qrdata;
-        var qr = new QRious({
-            element: document.getElementById('qrcode'),
-            value: qrdata,
-            size: 256,
-            background: '#fff',
-            foreground: '#222'
-        });
-    }
-    // Génère le QR code universel
-    window.addEventListener('DOMContentLoaded', function() {
-        var universalQr = new QRious({
-            element: document.getElementById('universal-qr-canvas'),
-            value: '{{ universal_qr_url }}',
-            size: 200,
-            background: '#fff',
-            foreground: '#222'
-        });
-        {% if qr_code_roi %}
-        var roiQr = new QRious({
-            element: document.getElementById('roi-qr-canvas'),
-            value: '{{ qr_code_roi }}',
-            size: 200,
-            background: '#fff',
-            foreground: '#222'
-        });
-        {% endif %}
-    });
+<script>
+function genToken() {
+  fetch('/gen_token_hash', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { document.getElementById('token').value = d.token; });
+}
 
-    // Génère un QR code d'accès direct pour un rôle donné
-    function generateRoleQR() {
-        var role = document.getElementById('role-select').value;
-        var token = document.getElementById('role-token').value.trim();
-        // Si pas de token, on en génère un via l'API
-        if (!token && role !== ':roi') {
-            fetch('/gen_token_hash', {method:'POST'})
-            .then(r=>r.json()).then(data=>{
-                document.getElementById('role-token').value = data.token;
-                showRoleQR(role, data.token);
-            });
-        } else {
-            showRoleQR(role, token || ':roi');
-        }
-    }
+function setRoi() {
+  document.getElementById('token').value = ':roi';
+}
 
-    function showRoleQR(role, token) {
-        var baseUrl = window.location.origin;
-        var url = '';
-        if (role === ':roi') {
-            url = baseUrl + '/roi_login?token=' + encodeURIComponent(token);
-        } else if (role === 'admin') {
-            url = baseUrl + '/admin_login?token=' + encodeURIComponent(token);
-        } else {
-            url = baseUrl + '/user_login?token=' + encodeURIComponent(token);
-        }
-        document.getElementById('role-qr-link').innerHTML = 'Lien d\'accès : <a href="' + url + '" target="_blank">' + url + '</a>';
-        var qr = new QRious({
-            element: document.getElementById('role-qr-canvas'),
-            value: url,
-            size: 200,
-            background: '#fff',
-            foreground: '#222'
-        });
+function generateQR() {
+  const token = document.getElementById('token').value.trim();
+  const duree = document.getElementById('duree').value;
+  const unite = document.getElementById('unite').value;
+  const page  = document.getElementById('page').value;
+  if (!token) return;
+
+  const qrdata = `${token}:${duree}${unite}:${page}`;
+  document.getElementById('qrtext').innerText = 'QR à scanner: ' + qrdata;
+
+  new QRious({
+    element: document.getElementById('qrcode'),
+    value: qrdata,
+    size: 256,
+    background: '#fff',
+    foreground: '#222'
+  });
+}
+
+function generateRoleQR() {
+  const role  = document.getElementById('role-select').value;
+  let token   = document.getElementById('role-token').value.trim();
+
+  const proceed = (t) => showRoleQR(role, t);
+
+  if (!token && role !== ':roi') {
+    fetch('/gen_token_hash', { method: 'POST' })
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('role-token').value = d.token;
+        proceed(d.token);
+      });
+  } else {
+    if (!token && role === ':roi') token = ':roi';
+    proceed(token);
+  }
+}
+
+function showRoleQR(role, token) {
+  const base = window.location.origin;
+  let url = '';
+  if (role === ':roi')      url = `${base}/roi_login?token=${encodeURIComponent(token)}`;
+  else if (role === 'admin') url = `${base}/admin_login?token=${encodeURIComponent(token)}`;
+  else                       url = `${base}/user_login?token=${encodeURIComponent(token)}`;
+
+  document.getElementById('role-qr-link').innerHTML =
+    'Lien d\\'accès : <a href="' + url + '" target="_blank">' + url + '</a>';
+
+  new QRious({
+    element: document.getElementById('role-qr-canvas'),
+    value: url,
+    size: 200,
+    background: '#fff',
+    foreground: '#222'
+  });
+}
+
+// Prévisualisation du QR admin (roi) si le canvas existe
+(function () {
+  const c = document.getElementById('roi-qr-canvas');
+  if (c) {
+    new QRious({
+      element: c,
+      value: "{{ qr_code_roi }}",
+      size: 200,
+      background: '#fff',
+      foreground: '#222'
     });
-    </script>
+  }
+})();
+</script>
 </body>
 </html>
