@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Erreur</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            background: #222; 
+            color: #fff; 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding-top: 100px; 
+        }
+        .error-box { 
+            background: #333; 
+            display: inline-block; 
+            padding: 32px 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 16px #0006; 
+        }
+        .error-message { 
+            color: #f00; 
+            font-size: 1.2em; 
+            margin-bottom: 16px; 
+        }
+        a { 
+            color: #0a8; 
+            text-decoration: none; 
+        }
+        a:hover { 
+            text-decoration: underline; 
+        }
+    </style>
+</head>
+<body>
+    <div class="error-box">
+        <h2>Erreur</h2>
+        <div class="error-message">{{ message or "Une erreur s'est produite." }}</div>
+        <a href="/">Retour à l'accueil</a>
+    </div>
+</body>
+</html>
