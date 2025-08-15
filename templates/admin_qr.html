@@ -36,10 +36,10 @@
                     <!-- Ajoutez d'autres pages ici si besoin -->
                 </select>
             </label><br>
-            <button onclick="generateQR()">Générer QR</button>
+            <button type="button" onclick="generateQR()">Générer QR</button>
         </form>
         <div id="qrtext" style="margin-top:16px;"></div>
-        <div id="qrcode"></div>
+        <canvas id="qrcode" width="256" height="256"></canvas>
     <div style="margin-top:32px;">
         <h3>Générer un QR code d'accès direct (auto-identification)</h3>
         <label>Rôle :
@@ -127,7 +127,7 @@ function showRoleQR(role, token) {
   else                       url = `${base}/user_login?token=${encodeURIComponent(token)}`;
 
   document.getElementById('role-qr-link').innerHTML =
-    'Lien d\\'accès : <a href="' + url + '" target="_blank">' + url + '</a>';
+    `Lien d'accès : <a href="${url}" target="_blank">${url}</a>`;
 
   new QRious({
     element: document.getElementById('role-qr-canvas'),
@@ -151,6 +151,6 @@ function showRoleQR(role, token) {
     });
   }
 })();
-</script>
+    </script>
 </body>
 </html>
